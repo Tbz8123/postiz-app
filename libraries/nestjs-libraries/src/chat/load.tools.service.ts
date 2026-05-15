@@ -90,7 +90,9 @@ export class LoadToolsService {
       )}
 `;
       },
-      model: openai(getAiMastraAgentModel()),
+      // OpenRouter rejects the Responses API payload Mastra builds here, but
+      // works with the OpenAI-compatible chat-completions model path.
+      model: openai.chat(getAiMastraAgentModel()),
       tools,
       memory: new Memory({
         storage: pStore,
