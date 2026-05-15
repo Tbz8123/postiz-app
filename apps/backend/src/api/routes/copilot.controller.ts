@@ -35,6 +35,10 @@ export type ChannelsContext = {
   ui: string;
 };
 
+// CopilotKit resolves its own OpenAI package type under pnpm, so the shared
+// client instance is runtime-compatible but not type-compatible during builds.
+const getCopilotOpenAIClient = () => getOpenAIClient('copilot') as any;
+
 @Controller('/copilot')
 export class CopilotController {
   constructor(
@@ -52,7 +56,7 @@ export class CopilotController {
       endpoint: '/copilot/chat',
       runtime: new CopilotRuntime(),
       serviceAdapter: new OpenAIAdapter({
-        openai: getOpenAIClient('copilot'),
+        openai: getCopilotOpenAIClient(),
         model: getAiCopilotModel(),
       }),
     });
@@ -96,7 +100,7 @@ export class CopilotController {
       runtime,
       // properties: req.body.variables.properties,
       serviceAdapter: new OpenAIAdapter({
-        openai: getOpenAIClient('copilot'),
+        openai: getCopilotOpenAIClient(),
         model: getAiCopilotModel(),
       }),
     });
