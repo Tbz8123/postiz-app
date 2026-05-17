@@ -73,17 +73,31 @@ export default function PrivacyPage() {
         <h2 className="text-xl font-semibold text-white">7. Your Rights</h2>
         <p className="mt-3 text-white/75">
           You may request access, correction, or deletion of your account information by
-          contacting us at <a className="text-[#FC69FF] hover:underline" href="mailto:mathwaksu@gmail.com">mathwaksu@gmail.com</a>.
-          You can also review our deletion process on the{' '}
-          <a className="text-[#FC69FF] hover:underline" href="/data-deletion">
-            Data Deletion Instructions
-          </a>{' '}
-          page.
+          contacting us at{' '}
+          <a className="text-[#FC69FF] hover:underline" href="mailto:mathwaksu@gmail.com">
+            mathwaksu@gmail.com
+          </a>.
         </p>
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold text-white">8. Security</h2>
+        <h2 className="text-xl font-semibold text-white">8. Data Deletion Instructions</h2>
+        <p className="mt-3 text-white/75">
+          To request deletion of your Futurexa.ai Social account data or data associated with
+          a connected social platform, email{' '}
+          <a className="text-[#FC69FF] hover:underline" href="mailto:mathwaksu@gmail.com">
+            mathwaksu@gmail.com
+          </a>{' '}
+          using the subject line &quot;Data Deletion Request&quot; and include the email address
+          tied to your account plus any relevant social profile identifiers. We may request
+          additional information to verify the request before deletion. Once verified, we will
+          delete or anonymize applicable account data within a reasonable period, except where
+          retention is required for security, fraud prevention, billing, or legal compliance.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-semibold text-white">9. Security</h2>
         <p className="mt-3 text-white/75">
           We use reasonable technical and organizational measures to protect information, but
           no method of storage or transmission is guaranteed to be completely secure.
@@ -91,7 +105,7 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold text-white">9. Contact</h2>
+        <h2 className="text-xl font-semibold text-white">10. Contact</h2>
         <p className="mt-3 text-white/75">
           For privacy questions, contact Futurexa.ai Social at{' '}
           <a className="text-[#FC69FF] hover:underline" href="mailto:mathwaksu@gmail.com">
