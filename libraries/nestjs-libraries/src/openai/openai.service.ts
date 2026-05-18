@@ -29,52 +29,71 @@ export class OpenaiService {
     const baseUrl = getAiBaseUrl('image');
     const isOpenRouter = !!baseUrl?.includes('openrouter.ai');
 
+    console.log('[generateImage] baseUrl:', baseUrl, '| isOpenRouter:', isOpenRouter, '| model:', IMAGE_MODEL, '| isUrl:', isUrl);
+
     if (isOpenRouter) {
-      // OpenRouter doesn't support /v1/images/generations.
-      // It uses chat.completions with modalities: ["image"] instead.
-      const response = await imageOpenai.chat.completions.create({
-        model: IMAGE_MODEL,
-        messages: [{ role: 'user', content: prompt }],
-        // @ts-ignore – OpenRouter-specific extension
-        modalities: ['image'],
-      } as any);
+      try {
+        // OpenRouter doesn't support /v1/images/generations.
+        // It uses chat.completions with modalities: ["image"] instead.
+        const response = await imageOpenai.chat.completions.create({
+          model: IMAGE_MODEL,
+          messages: [{ role: 'user', content: prompt }],
+          // @ts-ignore – OpenRouter-specific extension
+          modalities: ['image'],
+        } as any);
 
-      const message = response.choices?.[0]?.message as any;
+        console.log('[generateImage] OpenRouter response received, choices:', response.choices?.length);
 
-      // OpenRouter returns images in message.images[].image_url.url
-      // as base64 data-URLs (e.g. data:image/png;base64,...).
-      const imageUrl: string | undefined =
-        message?.images?.[0]?.image_url?.url;
+        const message = response.choices?.[0]?.message as any;
+        console.log('[generateImage] message keys:', message ? Object.keys(message) : 'no message');
 
-      if (!imageUrl) {
-        throw new Error(
-          'OpenRouter image generation returned no images. ' +
-            'Check that the model supports image output.'
+        // OpenRouter returns images in message.images[].image_url.url
+        // as base64 data-URLs (e.g. data:image/png;base64,...).
+        const imageUrl: string | undefined =
+          message?.images?.[0]?.image_url?.url;
+
+        if (!imageUrl) {
+          console.error('[generateImage] No imageUrl found. Full message:', JSON.stringify(message)?.substring(0, 500));
+          throw new Error(
+            'OpenRouter image generation returned no images. ' +
+              'Check that the model supports image output.'
+          );
+        }
+
+        console.log('[generateImage] Got image URL, length:', imageUrl.length, '| starts with:', imageUrl.substring(0, 30));
+
+        if (isUrl) {
+          return imageUrl;
+        }
+
+        // Strip the data-URL prefix to return raw base64
+        const base64Match = imageUrl.match(
+          /^data:image\/[^;]+;base64,(.+)$/
         );
+        return base64Match ? base64Match[1] : imageUrl;
+      } catch (err: any) {
+        console.error('[generateImage] OpenRouter error:', err?.message || err);
+        console.error('[generateImage] Error details:', JSON.stringify(err?.response?.data || err?.error || {})?.substring(0, 500));
+        throw err;
       }
-
-      if (isUrl) {
-        return imageUrl;
-      }
-
-      // Strip the data-URL prefix to return raw base64
-      const base64Match = imageUrl.match(
-        /^data:image\/[^;]+;base64,(.+)$/
-      );
-      return base64Match ? base64Match[1] : imageUrl;
     }
 
     // Standard OpenAI-compatible images.generate path
-    const generate = (
-      await imageOpenai.images.generate({
-        prompt,
-        response_format: isUrl ? 'url' : 'b64_json',
-        model: IMAGE_MODEL,
-        ...(isVertical ? { size: '1024x1792' } : {}),
-      })
-    ).data[0];
+    try {
+      const generate = (
+        await imageOpenai.images.generate({
+          prompt,
+          response_format: isUrl ? 'url' : 'b64_json',
+          model: IMAGE_MODEL,
+          ...(isVertical ? { size: '1024x1792' } : {}),
+        })
+      ).data[0];
 
-    return isUrl ? generate.url : generate.b64_json;
+      return isUrl ? generate.url : generate.b64_json;
+    } catch (err: any) {
+      console.error('[generateImage] Standard path error:', err?.message || err);
+      throw err;
+    }
   }
 
   async generatePromptForPicture(prompt: string) {
