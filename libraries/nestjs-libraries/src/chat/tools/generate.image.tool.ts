@@ -44,11 +44,25 @@ export class GenerateImageTool implements AgentToolInterface {
           org
         );
 
-        const file = await this.storage.uploadSimple(
-          'data:image/png;base64,' + image
-        );
+        // Convert base64 to Buffer and use uploadFile (not uploadSimple,
+        // which rejects non-HTTPS URLs like data: URIs).
+        const buffer = Buffer.from(image, 'base64');
+        const uploaded = await this.storage.uploadFile({
+          buffer,
+          originalname: 'generated-image.png',
+          mimetype: 'image/png',
+          fieldname: 'file',
+          size: buffer.length,
+          encoding: '7bit',
+          stream: buffer as any,
+          destination: '',
+          filename: 'generated-image.png',
+          path: '',
+        });
 
-        return this._mediaService.saveFile(org.id, file.split('/').pop(), file);
+        const filePath = uploaded.path || uploaded.destination;
+        const fileName = filePath.split('/').pop();
+        return this._mediaService.saveFile(org.id, fileName, filePath);
       },
     });
   }
