@@ -3,6 +3,7 @@ import { shuffle } from 'lodash';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import {
+  getAiBaseUrl,
   getAiChatModel,
   getAiImageModel,
   getOpenAIClient,
@@ -25,6 +26,45 @@ const VoicePrompt = z.object({
 @Injectable()
 export class OpenaiService {
   async generateImage(prompt: string, isUrl: boolean, isVertical = false) {
+    const baseUrl = getAiBaseUrl('image');
+    const isOpenRouter = !!baseUrl?.includes('openrouter.ai');
+
+    if (isOpenRouter) {
+      // OpenRouter doesn't support /v1/images/generations.
+      // It uses chat.completions with modalities: ["image"] instead.
+      const response = await imageOpenai.chat.completions.create({
+        model: IMAGE_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+        // @ts-ignore – OpenRouter-specific extension
+        modalities: ['image'],
+      } as any);
+
+      const message = response.choices?.[0]?.message as any;
+
+      // OpenRouter returns images in message.images[].image_url.url
+      // as base64 data-URLs (e.g. data:image/png;base64,...).
+      const imageUrl: string | undefined =
+        message?.images?.[0]?.image_url?.url;
+
+      if (!imageUrl) {
+        throw new Error(
+          'OpenRouter image generation returned no images. ' +
+            'Check that the model supports image output.'
+        );
+      }
+
+      if (isUrl) {
+        return imageUrl;
+      }
+
+      // Strip the data-URL prefix to return raw base64
+      const base64Match = imageUrl.match(
+        /^data:image\/[^;]+;base64,(.+)$/
+      );
+      return base64Match ? base64Match[1] : imageUrl;
+    }
+
+    // Standard OpenAI-compatible images.generate path
     const generate = (
       await imageOpenai.images.generate({
         prompt,
